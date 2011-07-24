@@ -1,0 +1,36 @@
+To get this working, you need the following components:
+
+ * Nagios (I assume you have this already running)
+ * check_selenium
+ * Selenium IDE
+ * Selenium RC
+ * JUnit library
+
+There are two possible scenarios how you could put this to work:
+
+ * Install the Selinium RC server on your Nagios host.
+ * Install the Selinum RC server on a different host.
+
+I will only explain how you can set up the Selenium RC server on your Nagios host. When you want to install it on a different server you currently have to use nrpe/nsca to get it going. This is the only difference, the rest stays the same. You can contact the Selenium RC server directly on another server, but this is not yet implemented.
+
+First record your test case with the Selenium IDE. When you've done this before, take a look at the Selenium IDE documentation. After recording it, export it to a Java file (File -> Export Test Case As ... -> Java (JUnit) - Selenium RC). Compile this Java file with javac or your favorite IDE. For compilation you already need the JUnit library and the file selenium-server.jar:
+
+      javac -cp ./junit.jar:./selenium-server.jar [your test case file]
+
+On your Nagis host extract the check_selenium.tar.gz file into your libexec path. Adjust the java home in the check_selenium file. As the Selenium IDE puts the Java classes automatically in the package com.tests.examples, create a directory com/tests/examples on your filesystem. Put the compiled Java file into this directory.
+
+Add the definition to your nagios configuration and test it. When your nagios server is a headless linux system, you can also run Selenium RC headless with Xvfb. Take a look at this post (http://serverfault.com/questions/108781/how-can-i-run-selenium-tests-on-an-ubuntu-server), how to set it up.
+
+Hope this all gives you new ways how to monitor your web applications or make the already established way a bit easier.
+
+The plugin also returns performance data for the test cases, but be aware the returned time also contains the startup time for the browser.
+
+To make it all a bit more comfortable, I wrote scripts to run the Selenium RC server as Windows service or *nix Daemon. The files are in the subdirectories selenium-server-linux and selenium-server-win. The scripts are realised with the Java Service Wrapper. When my scripts don't match your environment or you want to customize them, you'll find some usefull information here:
+http://wrapper.tanukisoftware.com/doc/english/integrate-simple-win.html or here
+http://wrapper.tanukisoftware.com/doc/english/integrate-simple-nix.html 
+
+The latest version of this plugin can be found here:
+http://gitorious.org/nagios-community/plugins
+
+You can contact me by email:
+devops.abyss@googlemail.com

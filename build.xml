@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  		check_selenium build script.
+-->
+
+<project name="check_selenium" default="dist" basedir=".">
+	
+	<property name="BASE"   location="."/>
+	<property name="src"	location="${BASE}/src"/>
+	<property name="bin"	location="${BASE}/bin"/>
+	<property name="lib"	location="${BASE}/lib"/>
+	<property name="dist"	location="${BASE}/dist"/>
+
+	<target name="dist" depends="jar">
+		<copy todir="${dist}">
+			<fileset dir="${bin}">
+				<include name="check_selenium*" />
+			</fileset>
+			<fileset dir="${BASE}">
+				<include name="README" />
+				<include name="COPYING" />
+			</fileset>
+		</copy>
+		<copy todir="${dist}/lib">
+			<fileset dir="${lib}"/>
+		</copy>
+		<tar destfile="${basedir}/check_selenium.tar.gz" basedir="${dist}" compression="gzip"/>
+	</target>
+	
+	<target name="dist-sel-server-linux">
+		<copy todir="${dist}/selenium-server-linux">
+			<fileset dir="${bin}/selenium-server-linux"/>
+		</copy>
+		<tar destfile="${basedir}/selenium-server-linux.tar.gz" basedir="${dist}/selenium-server-linux" compression="gzip"/>
+	</target>
+	
+	<target name="dist-sel-server-win">
+		<copy todir="${dist}/selenium-server-win">
+			<fileset dir="${bin}/selenium-server-win"/>
+		</copy>
+		<tar destfile="${basedir}/selenium-server-win.tar.gz" basedir="${dist}/selenium-server-win" compression="gzip"/>
+	</target>
+	
+	<target name="jar">
+		<jar destfile="${dist}/lib/selenium-example-tests.jar" basedir="${bin}" includes="com/**" excludes="info/**" />
+		<jar destfile="${dist}/lib/check-selenium.jar" basedir="${bin}" includes="info/**" excludes="com/**" >
+			<manifest>
+				<attribute name="Main-Class" value="info.devopsabyss.CallSeleniumTest"/>
+			</manifest>
+		</jar>
+	</target>
+	
+</project>
