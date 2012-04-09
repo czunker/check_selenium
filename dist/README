@@ -1,36 +1,75 @@
-To get this working, you need the following components:
+This is a Nagios check for Selenium test cases.
+With this check it is possible to put your recorded test cases from your Selenium IDE into Nagios to use them for monitoring.
 
- * Nagios (I assume you have this already running)
- * check_selenium
- * Selenium IDE
- * Selenium RC
- * JUnit library
+In my opinion this has the following advantages:
+
+    * You can transfer your test cases to monitoring without making any changes.
+    * You can run the test cases with multiple browsers. 
+      This means, you use the JavaScript and rendering engine of the browser not any other HTML/HTTP library.
+    * You are more flexible, when monitoring more complex scenarios.
+
+To get this working, you need the following components:
+(the jars needed for the check to run are already included in the source tree/zip file)
+
+    * Nagios (I assume you have this already running)
+    * check_selenium (http://gitorious.org/nagios-community/plugins/trees/master/check_selenium)
+    * Selenium IDE (http://seleniumhq.org/download/)
+    * Selenium RC (http://seleniumhq.org/download/)
+    * JUnit library (http://www.junit.org/)
 
 There are two possible scenarios how you could put this to work:
 
- * Install the Selinium RC server on your Nagios host.
- * Install the Selinum RC server on a different host.
+    * Install the Selinium RC server on your Nagios host.
+    * Install the Selinum RC server on a different host.
 
-I will only explain how you can set up the Selenium RC server on your Nagios host. When you want to install it on a different server you currently have to use nrpe/nsca to get it going. This is the only difference, the rest stays the same. You can contact the Selenium RC server directly on another server, but this is not yet implemented.
+I will only explain how you can set up the Selenium RC server on your Nagios host. When you want to install it on a different 
+server you currently have to use nrpe/nsca to get it going. This is the only difference, the rest stays the same. You can contact 
+the Selenium RC server directly on another server, but this is not yet implemented.
 
-First record your test case with the Selenium IDE. When you've done this before, take a look at the Selenium IDE documentation. After recording it, export it to a Java file (File -> Export Test Case As ... -> Java (JUnit) - Selenium RC). Compile this Java file with javac or your favorite IDE. For compilation you already need the JUnit library and the file selenium-server.jar:
+First record your test case with the Selenium IDE. When you've not done this before, take a look at the Selenium IDE documentation 
+(http://seleniumhq.org/docs/03_selenium_ide.html). After recording it, export it to a Java file (File -> Export Test Case As ... -> Java (JUnit) - Selenium RC). 
+Compile this Java file with javac or your favorite IDE. For compilation you already need the JUnit library and the file selenium-server.jar:
 
-      javac -cp ./junit.jar:./selenium-server.jar [your test case file]
+    javac -cp ./junit.jar:./selenium-server.jar [your test case file]
 
-On your Nagis host extract the check_selenium.tar.gz file into your libexec path. Adjust the java home in the check_selenium file. As the Selenium IDE puts the Java classes automatically in the package com.tests.examples, create a directory com/tests/examples on your filesystem. Put the compiled Java file into this directory.
+On your Nagios host, put check_selenium into your libexec path, add the files CallSeleniumTest.class, junit.jar and selenium-server.jar somewhere. 
+Adjust the classpath in the check_selenium file. As the Selenium IDE puts the Java classes automatically in the package com.tests.examples, 
+create a directory com/tests/examples on your filesystem and add it to the classpath. Put the compiled Java file into this directory.
 
-Add the definition to your nagios configuration and test it. When your nagios server is a headless linux system, you can also run Selenium RC headless with Xvfb. Take a look at this post (http://serverfault.com/questions/108781/how-can-i-run-selenium-tests-on-an-ubuntu-server), how to set it up.
+Add the definition to your nagios configuration and test it. When your nagios server is a headless linux system, you can also run Selenium RC 
+headless with Xvfb. Take a look at this post (http://serverfault.com/questions/108781/how-can-i-run-selenium-tests-on-an-ubuntu-server), how to set it up.
 
 Hope this all gives you new ways how to monitor your web applications or make the already established way a bit easier.
 
 The plugin also returns performance data for the test cases, but be aware the returned time also contains the startup time for the browser.
 
-To make it all a bit more comfortable, I wrote scripts to run the Selenium RC server as Windows service or *nix Daemon. The files are in the subdirectories selenium-server-linux and selenium-server-win. The scripts are realised with the Java Service Wrapper. When my scripts don't match your environment or you want to customize them, you'll find some usefull information here:
-http://wrapper.tanukisoftware.com/doc/english/integrate-simple-win.html or here
-http://wrapper.tanukisoftware.com/doc/english/integrate-simple-nix.html 
+Update 2011/07:
+Some people asked for a more detailed explanation on integrating check_selenium into Nagios. Here are two possible solutions how to integrate it. The first one is with NRPE. The check runs on a different host. With the second possibility, the check runs on your Nagios host.
+define command {
+  command_name  nrpe_check_selenium
+  command_line  $USER1$/check_nrpe -t 60 -H $HOSTADDRESS$ -p 5666 -c check_selenium -a "$ARG1$" "$ARG2$" "$ARG3$"
+}
 
-The latest version of this plugin can be found here:
-http://gitorious.org/nagios-community/plugins
+define command {
+  command_name  local_check_selenium
+  command_line  $USER1$/check_selenium "$ARG1$" "$ARG2$" "$ARG3$"
+}
+After that, you can define your service and asign it to a host:
+define service {
+  service_description   nrpe_selenium_Google
+  use   service-check-05min
+  host_name  your.winserver.here
+  check_command  nrpe_check_selenium!com.example.tests.GoogleTestCase!http://www.google.com!*iexplore
+}
 
-You can contact me by email:
-devops.abyss@googlemail.com
+define service {
+  service_description  selenium_Google
+  use  service-check-05min
+  host_name  your.server.here
+  check_command    local_check_selenium!com.example.tests.GoogleTestCase!http://www.google.com!*firefox
+}
+
+When executing the check via NRPE, add a line like this to your nrpe.cfg file on your remote host:
+
+command[check_selenium]=/usr/local/nagios/libexec/check_selenium.sh --class "$ARG1$" --baseUrl "$ARG2$" --browsertype "$ARG3$"
+Hope this will help some people to get faster results.

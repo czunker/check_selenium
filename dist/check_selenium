@@ -1,8 +1,0 @@
-#!/bin/bash
-
-JAVA_HOME=/opt/java/java5
-DIR=$(/usr/bin/dirname ${0})
-CLASSPATH=${DIR}/selenium-java-client-driver.jar:${DIR}/junit-4.8.1.jar:${DIR}/com/example/tests/.:${DIR}
-
-#${JAVA_HOME}/bin/java -cp ${CLASSPATH} CallSeleniumTest "com.example.tests.IntranetLebenSeleniumTestCase" "http://intranet-leben.hdi-gerling.de" "*firefox"
-${JAVA_HOME}/bin/java -cp ${CLASSPATH} CallSeleniumTest $@
