@@ -14,7 +14,7 @@ To get this working, you need the following components:
     * Nagios (I assume you have this already running)
     * check_selenium (http://gitorious.org/nagios-community/plugins/trees/master/check_selenium)
     * Selenium IDE (http://seleniumhq.org/download/)
-    * Selenium RC (http://seleniumhq.org/download/)
+    * Selenium Server (http://seleniumhq.org/download/)
     * JUnit library (http://www.junit.org/)
 
 There are two possible scenarios how you could put this to work:
