@@ -47,29 +47,29 @@ Update 2011/07:
 Some people asked for a more detailed explanation on integrating check_selenium into Nagios. Here are two possible solutions how to integrate it. The first one is with NRPE. The check runs on a different host. With the second possibility, the check runs on your Nagios host.
 define command {
   command_name  nrpe_check_selenium
-  command_line  $USER1$/check_nrpe -t 60 -H $HOSTADDRESS$ -p 5666 -c check_selenium -a "$ARG1$" "$ARG2$" "$ARG3$"
+  command_line  $USER1$/check_nrpe -t 60 -H $HOSTADDRESS$ -p 5666 -c check_selenium -a "$ARG1$"
 }
 
 define command {
   command_name  local_check_selenium
-  command_line  $USER1$/check_selenium "$ARG1$" "$ARG2$" "$ARG3$"
+  command_line  $USER1$/check_selenium "$ARG1$"
 }
 After that, you can define your service and asign it to a host:
 define service {
   service_description   nrpe_selenium_Google
   use   service-check-05min
   host_name  your.winserver.here
-  check_command  nrpe_check_selenium!com.example.tests.GoogleTestCase!http://www.google.com!*iexplore
+  check_command  nrpe_check_selenium!com.example.tests.GoogleTestCase
 }
 
 define service {
   service_description  selenium_Google
   use  service-check-05min
   host_name  your.server.here
-  check_command    local_check_selenium!com.example.tests.GoogleTestCase!http://www.google.com!*firefox
+  check_command    local_check_selenium!com.example.tests.GoogleTestCase
 }
 
 When executing the check via NRPE, add a line like this to your nrpe.cfg file on your remote host:
 
-command[check_selenium]=/usr/local/nagios/libexec/check_selenium.sh --class "$ARG1$" --baseUrl "$ARG2$" --browsertype "$ARG3$"
+command[check_selenium]=/usr/local/nagios/libexec/check_selenium.sh --class "$ARG1$"
 Hope this will help some people to get faster results.
