@@ -20,7 +20,7 @@ public class JUnitFailuresException extends Exception {
 		if (result.wasSuccessful()) {
 			return "successful";
 		} else {
-			return result.getFailures().toString();
+			return "Test Failures: " + result.getFailures().toString();
 		}
 	}
 

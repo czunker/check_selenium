@@ -97,7 +97,7 @@ public class CallSeleniumTest {
 			output = seTest.NAGIOS_TEXT_OK + " - " + cmd.getOptionValue("c") + " Tests passed | ExecTime=" + time + "ms";
 			nagios_rc = seTest.NAGIOS_RC_OK;
 		} catch (JUnitFailuresException ex) {
-			output = seTest.NAGIOS_TEXT_CRITICAL + " - " + "Test Failures: " + messageWithoutNewlines(ex) + " | ExecTime=" + ex.getResult().getRunTime()
+			output = seTest.NAGIOS_TEXT_CRITICAL + " - " + messageWithoutNewlines(ex) + " | ExecTime=" + ex.getResult().getRunTime()
 				+ "ms\n";
 			// Nagios 3 allows multi line output
 			// output = seTest.NAGIOS_TEXT_CRITICAL + "Test Failures | ExecTime=" + ex.getResult().getRunTime()
