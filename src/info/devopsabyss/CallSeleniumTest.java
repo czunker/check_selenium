@@ -21,7 +21,6 @@ package info.devopsabyss;
  *
  */
 
-import com.thoughtworks.selenium.SeleniumException;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -51,13 +50,9 @@ public class CallSeleniumTest {
 	//TODO: compile java files only when no class file found. this way the user does not have to compile the sources.
 	//		what is when i get compile errors? => return NAGIOS_UNKNOWN?
 
-	private long startTest(String className) throws ClassNotFoundException, JUnitFailuresException {
+	private Result runJUnitTest(String className) throws ClassNotFoundException {
 		Class<?> seleniumTestClass = Class.forName(className);
-		Result result = new JUnitCore().run(seleniumTestClass);
-		if (!result.wasSuccessful()) {
-			throw new JUnitFailuresException(result);
-		}
-		return result.getRunTime();
+		return new JUnitCore().run(seleniumTestClass);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -65,16 +60,17 @@ public class CallSeleniumTest {
 
 		CallSeleniumTest seTest = new CallSeleniumTest();
 
-		Option optionclass = new Option("c", "class", true, "full classname of testcase (required)    " +
-			" e.g. \"com.example.tests.GoogleSeleniumTestCase\"");
+		Option optionclass = new Option("c", "class", true, "full classname of testcase (required) e.g. \"com.example.tests.GoogleSeleniumTestCase\"");
 		//optiontype.setRequired(true);
 		Option optionverbose = new Option("v", "verbose", false, "show a lot of information (useful in case of problems)");
 		Option optionhelp = new Option("h", "help", false, "show this help screen");
+		Option optionNagios3 = new Option("3", "nagios3", false, "in case of a test failure, print a multiline message in nagios 3 format");
 
 		seTest.options = new Options();
 		seTest.options.addOption(optionclass);
 		seTest.options.addOption(optionverbose);
 		seTest.options.addOption(optionhelp);
+		seTest.options.addOption(optionNagios3);
 
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = null;
@@ -93,20 +89,21 @@ public class CallSeleniumTest {
 				System.exit(nagios_rc);
 			}
 
-			long time = seTest.startTest(cmd.getOptionValue("c"));
-			output = seTest.NAGIOS_TEXT_OK + " - " + cmd.getOptionValue("c") + " Tests passed | ExecTime=" + time + "ms";
-			nagios_rc = seTest.NAGIOS_RC_OK;
-		} catch (JUnitFailuresException ex) {
-			output = seTest.NAGIOS_TEXT_CRITICAL + " - " + messageWithoutNewlines(ex) + " | ExecTime=" + ex.getResult().getRunTime()
-				+ "ms\n";
-			// Nagios 3 allows multi line output
-			// output = seTest.NAGIOS_TEXT_CRITICAL + "Test Failures | ExecTime=" + ex.getResult().getRunTime()
-			// + "ms;;;;\n" + ex.getMessage() + "|";
-			nagios_rc = seTest.NAGIOS_RC_CRITICAL;
-		} catch (SeleniumException ex) {
-			printStackTraceWhenVerbose(cmd, ex);
-			output = seTest.NAGIOS_TEXT_CRITICAL + " - " + messageWithoutNewlines(ex) + "|";
-			nagios_rc = seTest.NAGIOS_RC_CRITICAL;
+			Result result = seTest.runJUnitTest(cmd.getOptionValue("c"));
+			if (result.wasSuccessful()) {
+				output = seTest.NAGIOS_TEXT_OK + " - " + cmd.getOptionValue("c") + " Tests passed | ExecTime=" + result.getRunTime() + "ms";
+				nagios_rc = seTest.NAGIOS_RC_OK;
+			} else {
+				String failureMessage = result.getFailures().toString();
+				output = seTest.NAGIOS_TEXT_CRITICAL + " - " + cmd.getOptionValue("c");
+				if (cmd.hasOption("3")) {
+					output += " Test Failures | ExecTime=" + result.getRunTime() + "ms\n"
+						+ failureMessage;
+				} else {
+					output += " Test Failures: " + withoutNewlines(failureMessage) + " | ExecTime=" + result.getRunTime() + "ms";
+				}
+				nagios_rc = seTest.NAGIOS_RC_CRITICAL;
+			}
 		} catch (UnrecognizedOptionException ex) {
 			output = seTest.NAGIOS_TEXT_UNKNOWN + " - " + "Parameter problems: " + messageWithoutNewlines(ex) + " |";
 			nagios_rc = seTest.NAGIOS_RC_UNKNOWN;
@@ -133,7 +130,11 @@ public class CallSeleniumTest {
 	}
 
 	private static String messageWithoutNewlines(final Throwable ex) {
-		return ex.getMessage().replaceAll("\n", " ")
+		return withoutNewlines(ex.getMessage());
+	}
+
+	private static String withoutNewlines(final String message) {
+		return message.replaceAll("\n", " ")
 			.replaceAll("  ", " ")
 			.replaceAll("  ", " ")
 			.replaceAll("  ", " ");
