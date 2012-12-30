@@ -12,6 +12,19 @@
 	<property name="lib"	location="${BASE}/lib"/>
 	<property name="dist"	location="${BASE}/dist"/>
 
+	<path id="compile.classpath">
+    	<fileset dir="${lib}/">
+        	<include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="compile" description="compile the source">
+		<mkdir dir="bin"/>
+        <javac srcdir="${src}" destdir="${bin}">
+          	<classpath refid="compile.classpath" />
+        </javac>
+    </target>
+	
 	<target name="dist" depends="jar">
 		<copy todir="${dist}">
 			<fileset dir="${bin}">
@@ -42,7 +55,7 @@
 		<tar destfile="${basedir}/selenium-server-win.tar.gz" basedir="${dist}/selenium-server-win" compression="gzip"/>
 	</target>
 	
-	<target name="jar">
+	<target name="jar" depends="compile">
 		<jar destfile="${dist}/lib/selenium-example-tests.jar" basedir="${bin}" includes="com/**" excludes="info/**" />
 		<jar destfile="${dist}/lib/check-selenium.jar" basedir="${bin}" includes="info/**" excludes="com/**" >
 			<manifest>
