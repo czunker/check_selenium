@@ -56,6 +56,7 @@
 	</target>
 	
 	<target name="jar" depends="compile">
+		<mkdir dir="${dist}/lib" />
 		<jar destfile="${dist}/lib/selenium-example-tests.jar" basedir="${bin}" includes="com/**" excludes="info/**" />
 		<jar destfile="${dist}/lib/check-selenium.jar" basedir="${bin}" includes="info/**" excludes="com/**" >
 			<manifest>
