@@ -156,7 +156,7 @@ public class CallSeleniumTest {
 		System.out.println("  - test case exported as JUnit 4 (Webdriver)");
 		System.out.println("");
 		System.out.println("Some example calls:");
-		System.out.println(" ./check_selenium -c \"com.example.tests.GoogleSeleniumWebdriverTestCase\"");
-		System.out.println(" ./check_selenium --class \"com.example.tests.GoogleSeleniumWebdriverTestCase\"");
+		System.out.println(" ./check_selenium.sh -c \"com.example.tests.GoogleSeleniumWebdriverTestCase\"");
+		System.out.println(" ./check_selenium.sh --class \"com.example.tests.GoogleSeleniumWebdriverTestCase\"");
 	}
 }
